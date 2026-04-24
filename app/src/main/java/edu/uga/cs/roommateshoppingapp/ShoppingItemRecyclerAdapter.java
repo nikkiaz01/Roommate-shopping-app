@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -33,12 +34,14 @@ public class ShoppingItemRecyclerAdapter extends RecyclerView.Adapter<ShoppingIt
 
         TextView itemName;
         TextView quantity;
+        Button purchaseButton;
 
         public ShoppingItemHolder(View itemView ) {
             super(itemView);
 
             itemName = itemView.findViewById( R.id.itemName );
             quantity = itemView.findViewById( R.id.quantity );
+            purchaseButton = itemView.findViewById(R.id.button7);
         }
     }
 
@@ -78,6 +81,15 @@ public class ShoppingItemRecyclerAdapter extends RecyclerView.Adapter<ShoppingIt
                 EditShoppingItemDialogFragment editShoppingItemFragment =
                         EditShoppingItemDialogFragment.newInstance( holder.getAdapterPosition(), key, name, quantity );
                 editShoppingItemFragment.show( ((AppCompatActivity)context).getSupportFragmentManager(), null);
+            }
+        });
+
+        holder.purchaseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AddToBasketDialog purchaseItemDialogFragment =
+                        AddToBasketDialog.newInstance( holder.getAdapterPosition(), key, name, quantity );
+                purchaseItemDialogFragment.show( ((AppCompatActivity)context).getSupportFragmentManager(), null);
             }
         });
     }

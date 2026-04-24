@@ -109,6 +109,7 @@ public class EditShoppingItemDialogFragment extends DialogFragment {
 
             // get the Activity's listener to add the new shopping item
             EditShoppingItemDialogListener listener = (EditShoppingItemDialogListener) getActivity();
+
             // add the new job lead
             listener.updateShoppingItem( position, shoppingItem, SAVE );
 

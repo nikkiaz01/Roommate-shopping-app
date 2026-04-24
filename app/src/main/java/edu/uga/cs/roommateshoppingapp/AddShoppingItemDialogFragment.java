@@ -68,8 +68,11 @@ public class AddShoppingItemDialogFragment extends DialogFragment {
         public void onClick(DialogInterface dialog, int which) {
             // get the new shopping item data from the user
             String itemName = itemNameView.getText().toString();
-            int quantity = parseInt(quantityView.getText().toString());
-
+            String quantityInput = quantityView.getText().toString();
+            int quantity = 1; //default will be to assume the quantity is 1
+            if (!quantityInput.isEmpty()) {
+                quantity = parseInt(quantityInput);
+            }
 
             // create a new ShoppingItem object
             ShoppingItem shoppingItem = new ShoppingItem( itemName, quantity );

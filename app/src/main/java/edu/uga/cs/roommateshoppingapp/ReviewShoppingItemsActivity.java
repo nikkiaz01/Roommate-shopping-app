@@ -1,5 +1,6 @@
 package edu.uga.cs.roommateshoppingapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -30,7 +31,8 @@ import java.util.List;
  */
 public class ReviewShoppingItemsActivity
         extends AppCompatActivity
-        implements AddShoppingItemDialogFragment.AddShoppingItemDialogListener, EditShoppingItemDialogFragment.EditShoppingItemDialogListener
+        implements AddShoppingItemDialogFragment.AddShoppingItemDialogListener, EditShoppingItemDialogFragment.EditShoppingItemDialogListener,
+        AddToBasketDialog.PurchaseItemDialogListener
 {
 
     public static final String DEBUG_TAG = "ReviewJobLeadsActivity";
@@ -42,11 +44,17 @@ public class ReviewShoppingItemsActivity
 
     private FirebaseDatabase database;
 
+    private String email;
+
+
     @Override
     protected void onCreate( Bundle savedInstanceState ) {
 
         Log.d( DEBUG_TAG, "onCreate()" );
-
+        Intent intent = getIntent();
+        if (intent != null) {
+            email = intent.getStringExtra("email");
+        }
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_review_shopping_items );
 
@@ -232,5 +240,53 @@ public class ReviewShoppingItemsActivity
                 }
             });
         }
+    }
+    public void moveItemToBasket(int position, ShoppingItem itemInBasket, int status) {
+        DatabaseReference basketRef = database.getReference("basketItems");
+
+        //checking if the item already exists in the basket
+        basketRef.orderByChild("itemName").equalTo(itemInBasket.getItemName())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            for (DataSnapshot child : snapshot.getChildren()) { //there is at least one match and sift through it
+                                ShoppingItem existingInBasket = child.getValue(ShoppingItem.class);
+                                if (existingInBasket != null) {
+                                    int newQty = existingInBasket.getQuantity() + itemInBasket.getQuantity(); //adding to existing entry
+                                    child.getRef().child("quantity").setValue(newQty);
+                                }
+                                break; //  update the first match found - should only ever be one
+                            }
+                            finalizeMove(position, itemInBasket, status);
+                        } else {
+                            //item does not exist so creating a new basket entry
+                            basketRef.push().setValue(itemInBasket)
+                                    .addOnSuccessListener(aVoid -> finalizeMove(position, itemInBasket, status));
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(DEBUG_TAG, "Basket query failed: " + error.getMessage());
+                    }
+                });
+    }
+
+    /**
+     * Helper to handle the UI and Shopping List update after basket logic is done.
+     */
+    private void finalizeMove(int position, ShoppingItem itemInBasket, int status) {
+        Toast.makeText(this, itemInBasket.getItemName() + " moved to basket", Toast.LENGTH_SHORT).show();
+
+        // Calculate remaining quantity for the Shopping List
+        ShoppingItem originalItem = shoppingItemsList.get(position);
+        int remainingQty = originalItem.getQuantity() - itemInBasket.getQuantity();
+
+        // Create the update object for the Shopping List
+        ShoppingItem updateItem = new ShoppingItem(itemInBasket.getItemName(), remainingQty);
+        updateItem.setKey(itemInBasket.getKey());
+
+        updateShoppingItem(position, updateItem, status);
     }
 }

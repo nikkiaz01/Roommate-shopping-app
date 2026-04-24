@@ -58,7 +58,8 @@ public class MainActivity extends AppCompatActivity
                             Log.d( DEBUG_TAG, "signInWithEmail:success" );
                             //FirebaseUser user = mAuth.getCurrentUser();
                             // after a successful sign in, start the job leads management activity
-                            Intent intent = new Intent( MainActivity.this, ReviewShoppingItemsActivity.class );
+                            Intent intent = new Intent( MainActivity.this, NavigationActivity.class );
+                            intent.putExtra("email", email);
                             startActivity( intent );
                         }
                         else {

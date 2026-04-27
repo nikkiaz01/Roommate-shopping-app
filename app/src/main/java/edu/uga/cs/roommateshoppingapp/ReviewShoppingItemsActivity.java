@@ -15,6 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -49,13 +51,18 @@ public class ReviewShoppingItemsActivity
 
     @Override
     protected void onCreate( Bundle savedInstanceState ) {
-
-        Log.d( DEBUG_TAG, "onCreate()" );
-        Intent intent = getIntent();
-        if (intent != null) {
-            email = intent.getStringExtra("email");
-        }
         super.onCreate( savedInstanceState );
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            this.email = user.getEmail();
+        } else {
+            // If no one is logged in, send them back to Login
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        }
+        Log.d( DEBUG_TAG, "onCreate()" );
+
         setContentView( R.layout.activity_review_shopping_items );
 
         recyclerView = findViewById( R.id.recyclerView );
@@ -242,26 +249,47 @@ public class ReviewShoppingItemsActivity
         }
     }
     public void moveItemToBasket(int position, ShoppingItem itemInBasket, int status) {
-        DatabaseReference basketRef = database.getReference("basketItems");
+        DatabaseReference basketRef = database.getReference("baskets");
 
-        //checking if the item already exists in the basket
-        basketRef.orderByChild("itemName").equalTo(itemInBasket.getItemName())
+        basketRef.orderByChild("roommate").equalTo(email)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()) {
-                            for (DataSnapshot child : snapshot.getChildren()) { //there is at least one match and sift through it
-                                ShoppingItem existingInBasket = child.getValue(ShoppingItem.class);
-                                if (existingInBasket != null) {
-                                    int newQty = existingInBasket.getQuantity() + itemInBasket.getQuantity(); //adding to existing entry
-                                    child.getRef().child("quantity").setValue(newQty);
+                            for (DataSnapshot child : snapshot.getChildren()) {
+                                Basket existingBasket = child.getValue(Basket.class);
+                                if (existingBasket != null) {
+                                    ArrayList<ShoppingItem> basketList = existingBasket.getBasketList();
+                                    if (basketList == null) {
+                                        basketList = new ArrayList<>();
+                                    }
+
+                                    boolean found = false;
+                                    for (ShoppingItem s : basketList) {
+                                        if (s.getItemName().equalsIgnoreCase(itemInBasket.getItemName())) {
+                                            s.setQuantity(s.getQuantity() + itemInBasket.getQuantity());
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!found) {
+                                        basketList.add(itemInBasket);
+                                    }
+
+                                    // FIX 2: Ensure this child name matches your Basket class getter
+                                    // If your class is getBasketList(), this should be "basketList"
+                                    child.getRef().child("basketList").setValue(basketList)
+                                            .addOnSuccessListener(aVoid -> finalizeMove(position, itemInBasket, status));
                                 }
-                                break; //  update the first match found - should only ever be one
+                                break;
                             }
-                            finalizeMove(position, itemInBasket, status);
-                        } else {
-                            //item does not exist so creating a new basket entry
-                            basketRef.push().setValue(itemInBasket)
+                        } else { //no basket for this roommate
+                            ArrayList<ShoppingItem> newList = new ArrayList<>();
+                            newList.add(itemInBasket);
+                            Basket newBasket = new Basket(newList, email);
+
+                            basketRef.push().setValue(newBasket)
                                     .addOnSuccessListener(aVoid -> finalizeMove(position, itemInBasket, status));
                         }
                     }

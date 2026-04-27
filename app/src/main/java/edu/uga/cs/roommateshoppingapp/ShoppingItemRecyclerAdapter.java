@@ -39,8 +39,8 @@ public class ShoppingItemRecyclerAdapter extends RecyclerView.Adapter<ShoppingIt
         public ShoppingItemHolder(View itemView ) {
             super(itemView);
 
-            itemName = itemView.findViewById( R.id.itemName );
-            quantity = itemView.findViewById( R.id.quantity );
+            itemName = itemView.findViewById( R.id.itemName);
+            quantity = itemView.findViewById( R.id.quantity);
             purchaseButton = itemView.findViewById(R.id.button7);
         }
     }

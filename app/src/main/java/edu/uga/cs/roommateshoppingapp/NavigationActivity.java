@@ -26,7 +26,6 @@ public class NavigationActivity extends AppCompatActivity
 
     private FirebaseAuth mAuth;
 
-    private String email;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,19 +33,17 @@ public class NavigationActivity extends AppCompatActivity
         AppCompatDelegate.setDefaultNightMode( AppCompatDelegate.MODE_NIGHT_YES );
 
         super.onCreate(savedInstanceState);
-        Intent intent = getIntent();
-        if (intent != null) {
-             email = intent.getStringExtra("email");
-        }
         setContentView(R.layout.activity_navigation);
 
         Log.d( DEBUG_TAG, "JobLead: NavigationActivity.onCreate()" );
 
         Button shoppingListButton = findViewById( R.id.button4 );
         Button basketButton = findViewById( R.id.button5 );
+        Button purchasesButton = findViewById(R.id.button6);
 
         shoppingListButton.setOnClickListener( new shoppingListClickListener() );
         basketButton.setOnClickListener( new basketClickListener() );
+        purchasesButton.setOnClickListener( new purchasesClickListener() );
 
     }
 
@@ -55,7 +52,6 @@ public class NavigationActivity extends AppCompatActivity
         @Override
         public void onClick( View v ) {
             Intent intent = new Intent( NavigationActivity.this, ReviewShoppingItemsActivity.class );
-            intent.putExtra("email", email);
             startActivity( intent );
         }
     }
@@ -64,11 +60,17 @@ public class NavigationActivity extends AppCompatActivity
          @Override
          public void onClick( View v ) {
              Intent intent = new Intent( NavigationActivity.this, ReviewBasketActivity.class );
-             intent.putExtra("email", email);
              startActivity( intent );
          }
      }
 
+     private class purchasesClickListener implements View.OnClickListener {
+         @Override
+         public void onClick( View v ) {
+             Intent intent = new Intent( NavigationActivity.this, ReviewPurchasesActivity.class );
+             startActivity( intent );
+         }
+     }
 
 
     // These activity callback methods are not needed and are for edational purposes only

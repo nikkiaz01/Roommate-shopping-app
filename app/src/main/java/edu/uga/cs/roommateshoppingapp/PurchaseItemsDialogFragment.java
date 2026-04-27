@@ -6,69 +6,58 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import java.util.List;
+
 public class PurchaseItemsDialogFragment extends DialogFragment {
-//need to put the new created dialog layout whereever, implement cancel, implement if they purchase which involves making
     //a purchase group, removing basketItems completely
-    private EditText quantityView;
-    private int position;
-    private String key;
-    private String name;
-    private int quantity;
+
+    private double totalWithTax;
+
+    private PurchaseItemDialogListener mListener;
 
     public interface PurchaseItemDialogListener {
-        void moveItemToBasket(int position, ShoppingItem item, int status);
+        void checkOutBasket(PurchaseGroup purchaseItems);
     }
 
-    public static PurchaseItemsDialogFragment newInstance(int position, String key, String name, int quantity) {
-        PurchaseItemsDialogFragment dialog = new PurchaseItemsDialogFragment();
-        Bundle args = new Bundle();
-        args.putString("key", key);
-        args.putInt("position", position);
-        args.putString("name", name);
-        args.putInt("quantity", quantity);
-        dialog.setArguments(args);
-        return dialog;
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        try {
+            mListener = (PurchaseItemDialogListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString() + " must implement PurchaseItemDialogListener");
+        }
     }
 
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        key = getArguments().getString("key");
-        position = getArguments().getInt("position");
-        name = getArguments().getString("name");
-        quantity = getArguments().getInt("quantity");
 
         LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        final View layout = inflater.inflate(R.layout.add_to_basket_dialog, null);
+        final View layout = inflater.inflate(R.layout.purchase_items_dialog, null);
 
-        quantityView = layout.findViewById(R.id.editText2);
-        quantityView.setText(String.valueOf(quantity));
+        EditText totalView = layout.findViewById(R.id.editTextNumberDecimal);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogStyle);
-        builder.setView(layout).setTitle("Add " + name + " to Basket");
+        builder.setView(layout).setTitle("Enter total for items in Basket:");
         builder.setNegativeButton(android.R.string.cancel, (d, w) -> d.dismiss());
-        builder.setPositiveButton("Add to Basket", (d, w) -> {
-            int status = 1;
-            int finalQty;
-
-            try {
-                finalQty = Integer.parseInt(quantityView.getText().toString());
-            } catch (NumberFormatException e) {
-                finalQty = quantity;
+        builder.setPositiveButton("Confirm", (d, w) -> {
+            String totalString = totalView.getText().toString();
+            if (!totalString.isEmpty()) {
+                totalWithTax = Double.parseDouble((totalView.getText().toString()));
+                PurchaseGroup purchaseItems = new PurchaseGroup(totalWithTax);
+                mListener.checkOutBasket(purchaseItems);
+            } else {
+                Toast.makeText(getContext(), "Please enter a valid total", Toast.LENGTH_SHORT).show();
             }
 
-            if (quantity <= finalQty) {
-                status = 2; // DELETE
-                finalQty = quantity;
-            }
 
-            ShoppingItem basketItem = new ShoppingItem(name, finalQty);
-            basketItem.setKey(key);
-            ((PurchaseItemDialogListener) getActivity()).moveItemToBasket(position, basketItem, status);
         });
 
         return builder.create();

@@ -1,10 +1,12 @@
 package edu.uga.cs.roommateshoppingapp;
 
+import java.io.Serializable;
+
 /**
  * This class represents a single shopping item, including the item name and
  * quantity.
  */
-public class ShoppingItem {
+public class ShoppingItem implements Serializable  {
     private String key;
     private String itemName;
     private int quantity;

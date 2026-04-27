@@ -1,6 +1,8 @@
 package edu.uga.cs.roommateshoppingapp;
 
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,26 +12,26 @@ import java.util.List;
 public class PurchaseGroup {
     private String key;
     private String roommate;
-    private List<ShoppingItem> items;
+    private ArrayList<ShoppingItem> items;
     private double totalWithTax;
-    private long timestamp;
+    private String timestamp;
 
     public PurchaseGroup() {}
 
-    public PurchaseGroup(String roommate, List<ShoppingItem> items, double totalWithTax) {
-        this.roommate = roommate;
-        this.items = items;
+    public PurchaseGroup(double totalWithTax) {
+        this.roommate = null;
+        this.items = null;
         this.totalWithTax = totalWithTax;
-        this.timestamp = System.currentTimeMillis();
+        this.timestamp = LocalDate.now().toString();
     }
 
     public String getKey() { return key; }
     public void setKey(String key) { this.key = key; }
     public String getRoommate() { return roommate; }
     public void setRoommate(String roommate) { this.roommate = roommate; }
-    public List<ShoppingItem> getItems() { return items; }
-    public void setItems(List<ShoppingItem> items) { this.items = items; }
+    public ArrayList<ShoppingItem> getItems() { return items; }
+    public void setItems(ArrayList<ShoppingItem> items) { this.items = items; }
     public double getTotalWithTax() { return totalWithTax; }
     public void setTotalWithTax(double totalWithTax) { this.totalWithTax = totalWithTax; }
-    public long getTimestamp() { return timestamp; }
+    public String getTimestamp() { return timestamp; }
 }

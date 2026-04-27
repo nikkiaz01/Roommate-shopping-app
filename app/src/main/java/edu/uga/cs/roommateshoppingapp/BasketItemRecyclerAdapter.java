@@ -1,7 +1,6 @@
 package edu.uga.cs.roommateshoppingapp;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,14 +9,15 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
-import java.util.List;
+
+import java.util.ArrayList;
 
 public class BasketItemRecyclerAdapter extends RecyclerView.Adapter<BasketItemRecyclerAdapter.BasketItemHolder> {
 
-    private List<ShoppingItem> basketItemList;
+    private ArrayList<ShoppingItem> basketItemList;
     private Context context;
 
-    public BasketItemRecyclerAdapter(List<ShoppingItem> basketItemList, Context context) {
+    public BasketItemRecyclerAdapter(ArrayList<ShoppingItem> basketItemList, Context context) {
         this.basketItemList = basketItemList;
         this.context = context;
     }

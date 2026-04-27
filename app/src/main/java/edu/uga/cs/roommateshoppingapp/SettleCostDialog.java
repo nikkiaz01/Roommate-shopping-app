@@ -82,28 +82,29 @@ public class SettleCostDialog extends DialogFragment {
         roommatePaidView = layout.findViewById( R.id.text4);
         averageRoommateView = layout.findViewById( R.id.text6);
 
-        totalPriceView.setText("$" + totalOwed);
+        totalPriceView.setText(String.format("$%.2f", totalOwed));
         int numberRoommates = 0;
         String roommatePaid = "";
         for (Map.Entry<String, Double> entry : roommateTotals.entrySet()) {
             String name = entry.getKey();
             Double total = entry.getValue();
-            roommatePaid = roommatePaid + name + ":\n Paid: $" + total + "\n";
+            roommatePaid = roommatePaid + name + ":\n Paid: " + String.format("$%.2f", total) + "\n";
             numberRoommates ++;
         }
         roommatePaidView.setText(roommatePaid);
 
         avgPerRoommate = Math.round((totalOwed / numberRoommates) * 100.0) / 100.0;
-        averageRoommateView.setText(String.valueOf(avgPerRoommate));
+        averageRoommateView.setText(String.format("$%.2f", avgPerRoommate));
         String roommateOwed = "";
         for (Map.Entry<String, Double> entry : roommateTotals.entrySet()) {
             String name = entry.getKey();
             Double total = entry.getValue();
-            Double owe = Math.round((total - avgPerRoommate) * 100.0) / 100.0;
+            Double owe = Math.round((avgPerRoommate - total) * 100.0) / 100.0;
+
             if (owe <= 0.0){
-                roommateOwed = roommateOwed + name + ":\n Owes: $0.0\n";
+                roommateOwed = roommateOwed + name + ":\n Owes: $0.00\n";
             } else {
-                roommateOwed = roommateOwed + name + ":\n Owes: $" + owe + "\n";
+                roommateOwed = roommateOwed + name + ":\n Owes: " + String.format("$%.2f", owe) + "\n";
             }
         }
         roommateOwedView.setText(roommateOwed);
@@ -125,7 +126,7 @@ public class SettleCostDialog extends DialogFragment {
         });
 
         // The Save button handler
-        builder.setPositiveButton( "SAVE CHANGES", new edu.uga.cs.roommateshoppingapp.SettleCostDialog.SaveButtonClickListener() );
+        builder.setPositiveButton( "CONFIRM", new edu.uga.cs.roommateshoppingapp.SettleCostDialog.SaveButtonClickListener() );
 
 
         // Create the AlertDialog and show it

@@ -78,6 +78,9 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
                             PurchaseGroup indivPurchaseGroup = postSnapshot.getValue(PurchaseGroup.class);
 
                             if (indivPurchaseGroup != null) {
+                                if (indivPurchaseGroup.getItems() == null) {
+                                    indivPurchaseGroup.setItems(new ArrayList<>());
+                                }
                                 purchaseItems.add(indivPurchaseGroup);
                             }
                         }
@@ -107,25 +110,20 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
 
         final ShoppingItem removedItem;
         if (itemToRemoveIndex != -1) {
-            removedItem =  editedGroup.getItems().get(itemToRemoveIndex);
+            removedItem = editedGroup.getItems().get(itemToRemoveIndex);
             editedGroup.getItems().remove(itemToRemoveIndex);
-        } else {
-            removedItem = null;
-        }
-
-        // 3. Sync to Firebase
-        database.getReference("purchaseList")
-                .child(editedGroup.getKey())
-                .setValue(editedGroup)
-                .addOnSuccessListener(aVoid -> {
-                    if (removedItem != null) {
+            if (editedGroup.getItems().isEmpty()) {
+                if (removedItem != null) {
                     shoppingRef.orderByChild("itemName").equalTo(removedItem.getItemName())
                             .addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                                     if (snapshot.exists()) {
                                         for (DataSnapshot child : snapshot.getChildren()) {
-                                            int currentQty = child.child("quantity").getValue(Integer.class);
+                                            Integer currentQty = child.child("quantity").getValue(Integer.class);
+                                            if (currentQty == null) {
+                                                currentQty = 0;
+                                            }
                                             child.getRef().child("quantity").setValue(currentQty + removedItem.getQuantity());
                                             break;
                                         }
@@ -136,6 +134,50 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError error) {}
                             });
+                }
+
+                database.getReference("purchaseList")
+                        .child(editedGroup.getKey())
+                        .removeValue()
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(this, "Purchase removed (no items left)", Toast.LENGTH_SHORT).show();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("FIREBASE_DELETE", "Failed: " + e.getMessage());
+                        });
+
+                return;
+            }
+        } else {
+            removedItem = null;
+        }
+
+        // 3. Sync to Firebase
+        database.getReference("purchaseList")
+                .child(editedGroup.getKey())
+                .setValue(editedGroup)
+                .addOnSuccessListener(aVoid -> {
+                    if (removedItem != null) {
+                        shoppingRef.orderByChild("itemName").equalTo(removedItem.getItemName())
+                                .addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                        if (snapshot.exists()) {
+                                            for (DataSnapshot child : snapshot.getChildren()) {
+                                                Integer currentQty = child.child("quantity").getValue(Integer.class);
+                                                if (currentQty == null) {
+                                                    currentQty = 0;
+                                                }
+                                                child.getRef().child("quantity").setValue(currentQty + removedItem.getQuantity());
+                                                break;
+                                            }
+                                        } else {
+                                            shoppingRef.push().setValue(removedItem);
+                                        }
+                                    }
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError error) {}
+                                });
                     }
                     Toast.makeText(this, "Purchase updated successfully", Toast.LENGTH_SHORT).show();
                 })
@@ -172,8 +214,8 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
         database.getReference("purchaseList")
                 .removeValue()
                 .addOnSuccessListener(aVoid -> {
-                   purchasesList.clear();
-                   Toast.makeText(this, "Recently Purchased Settled Successfully", Toast.LENGTH_SHORT).show();
+                    purchasesList.clear();
+                    Toast.makeText(this, "Recently Purchased Settled Successfully", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FIREBASE_UPDATE", "Failed: " + e.getMessage());
@@ -183,4 +225,3 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
 
 
 }
-

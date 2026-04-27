@@ -20,7 +20,7 @@ public class PurchaseGroup {
 
     public PurchaseGroup(double totalWithTax) {
         this.roommate = null;
-        this.items = null;
+        this.items = new ArrayList<>();
         this.totalWithTax = totalWithTax;
         this.timestamp = LocalDate.now().toString();
     }

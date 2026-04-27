@@ -40,11 +40,12 @@ public class NavigationActivity extends AppCompatActivity
         Button shoppingListButton = findViewById( R.id.button4 );
         Button basketButton = findViewById( R.id.button5 );
         Button purchasesButton = findViewById(R.id.button6);
+        Button logoutButton = findViewById(R.id.button8);
 
         shoppingListButton.setOnClickListener( new shoppingListClickListener() );
         basketButton.setOnClickListener( new basketClickListener() );
         purchasesButton.setOnClickListener( new purchasesClickListener() );
-
+        logoutButton.setOnClickListener(new logoutClickListener());
     }
 
 
@@ -68,6 +69,13 @@ public class NavigationActivity extends AppCompatActivity
          @Override
          public void onClick( View v ) {
              Intent intent = new Intent( NavigationActivity.this, ReviewPurchasesActivity.class );
+             startActivity( intent );
+         }
+     }
+     private class logoutClickListener implements View.OnClickListener {
+         @Override
+         public void onClick( View v ) {
+             Intent intent = new Intent( NavigationActivity.this, MainActivity.class );
              startActivity( intent );
          }
      }

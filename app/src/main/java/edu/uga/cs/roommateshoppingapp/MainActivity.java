@@ -114,31 +114,31 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onResume() {
-        Log.d( DEBUG_TAG, "JobLead: MainActivity.onResume()" );
+        Log.d( DEBUG_TAG, "ShoppingItem: MainActivity.onResume()" );
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        Log.d( DEBUG_TAG, "JobLead: MainActivity.onPause()" );
+        Log.d( DEBUG_TAG, "ShoppingItem: MainActivity.onPause()" );
         super.onPause();
     }
 
     @Override
     protected void onStop() {
-        Log.d( DEBUG_TAG, "JobLead: MainActivity.onStop()" );
+        Log.d( DEBUG_TAG, "ShoppingItem: MainActivity.onStop()" );
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        Log.d( DEBUG_TAG, "JobLead: MainActivity.onDestroy()" );
+        Log.d( DEBUG_TAG, "ShoppingItem: MainActivity.onDestroy()" );
         super.onDestroy();
     }
 
     @Override
     protected void onRestart() {
-        Log.d( DEBUG_TAG, "JobLead: MainActivity.onRestart()" );
+        Log.d( DEBUG_TAG, "ShoppingItem: MainActivity.onRestart()" );
         super.onRestart();
     }
 }

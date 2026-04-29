@@ -33,7 +33,7 @@ public class ReviewShoppingItemsActivity
         EditShoppingItemDialogFragment.EditShoppingItemDialogListener,
         AddToBasketDialog.PurchaseItemDialogListener {
 
-    public static final String DEBUG_TAG = "ReviewJobLeadsActivity";
+    public static final String DEBUG_TAG = "ReviewShoppingItemsActivity";
 
     private RecyclerView recyclerView;
     private ShoppingItemRecyclerAdapter recyclerAdapter;

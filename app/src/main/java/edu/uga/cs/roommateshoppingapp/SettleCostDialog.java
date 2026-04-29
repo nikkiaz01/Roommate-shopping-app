@@ -1,5 +1,3 @@
-// :contentReference[oaicite:0]{index=0}
-
 package edu.uga.cs.roommateshoppingapp;
 
 import android.app.Dialog;

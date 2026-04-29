@@ -13,67 +13,107 @@ import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 
-    public class PurchaseItemsRecyclerAdapter extends RecyclerView.Adapter<edu.uga.cs.roommateshoppingapp.PurchaseItemsRecyclerAdapter.PurchaseItemHolder> {
+/**
+ * RecyclerView adapter used to display a list of purchase groups.
+ * Each item shows purchase date, roommate, total price, and items included.
+ */
+public class PurchaseItemsRecyclerAdapter extends RecyclerView.Adapter<PurchaseItemsRecyclerAdapter.PurchaseItemHolder> {
 
-        private ArrayList<PurchaseGroup> purchaseGroupsList;
-        private Context context;
+    private ArrayList<PurchaseGroup> purchaseGroupsList;
+    private Context context;
 
-        public PurchaseItemsRecyclerAdapter(ArrayList<PurchaseGroup> purchaseGroupsList, Context context) {
-            this.purchaseGroupsList = purchaseGroupsList;
-            this.context = context;
-        }
+    /**
+     * Constructor for the adapter.
+     *
+     * @param purchaseGroupsList list of purchase groups
+     * @param context activity context
+     */
+    public PurchaseItemsRecyclerAdapter(ArrayList<PurchaseGroup> purchaseGroupsList, Context context) {
+        this.purchaseGroupsList = purchaseGroupsList;
+        this.context = context;
+    }
 
-        class PurchaseItemHolder extends RecyclerView.ViewHolder {
-            TextView purchaseName;
-            TextView price;
-            TextView roommate;
-            TextView items;
-            Button removeButton;
+    /**
+     * ViewHolder class that holds references to each purchase item view.
+     */
+    class PurchaseItemHolder extends RecyclerView.ViewHolder {
+        TextView purchaseName;
+        TextView price;
+        TextView roommate;
+        TextView items;
+        Button removeButton;
 
-            public PurchaseItemHolder(View itemView) {
-                super(itemView);
-                purchaseName = itemView.findViewById(R.id.purchaseName);
-                price = itemView.findViewById(R.id.price);
-                roommate = itemView.findViewById(R.id.textView5);
-                items = itemView.findViewById(R.id.items);
-                removeButton = itemView.findViewById(R.id.button7);
-            }
-        }
-
-        @NonNull
-        @Override
-        public edu.uga.cs.roommateshoppingapp.PurchaseItemsRecyclerAdapter.PurchaseItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.purchase_group_card, parent, false);
-            return new edu.uga.cs.roommateshoppingapp.PurchaseItemsRecyclerAdapter.PurchaseItemHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull edu.uga.cs.roommateshoppingapp.PurchaseItemsRecyclerAdapter.PurchaseItemHolder holder, int position) {
-            PurchaseGroup purchaseGroupItem = purchaseGroupsList.get(position);
-
-            holder.purchaseName.setText("Purchase made on " + purchaseGroupItem.getTimestamp());
-            holder.roommate.setText("By: " + purchaseGroupItem.getRoommate());
-            holder.price.setText("Total: $" + purchaseGroupItem.getTotalWithTax());
-            ArrayList<ShoppingItem> boughtItems = purchaseGroupItem.getItems();
-            String itemsString = "Items:\n";
-            for (ShoppingItem s : boughtItems){
-                    itemsString = itemsString + s.getItemName() + " - Qty: " + s.getQuantity() + "\n";
-            }
-            holder.items.setText(itemsString);
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                    EditDeletePurchaseDialog editDeletePurchaseDialogFrag =
-                            EditDeletePurchaseDialog.newInstance( holder.getAdapterPosition(), purchaseGroupItem.getKey(), purchaseGroupItem.getRoommate(), purchaseGroupItem.getTotalWithTax(), purchaseGroupItem.getItems() );
-                    editDeletePurchaseDialogFrag.show( ((AppCompatActivity)context).getSupportFragmentManager(), null);
-                }
-            });
-        }
-
-        @Override
-        public int getItemCount() {
-            return purchaseGroupsList.size();
+        public PurchaseItemHolder(View itemView) {
+            super(itemView);
+            purchaseName = itemView.findViewById(R.id.purchaseName);
+            price = itemView.findViewById(R.id.price);
+            roommate = itemView.findViewById(R.id.textView5);
+            items = itemView.findViewById(R.id.items);
+            removeButton = itemView.findViewById(R.id.button7);
         }
     }
 
+    /**
+     * Creates a new ViewHolder when needed.
+     */
+    @NonNull
+    @Override
+    public PurchaseItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.purchase_group_card, parent, false);
+        return new PurchaseItemHolder(view);
+    }
+
+    /**
+     * Binds data to each purchase item in the list.
+     * Displays purchase info and sets click behavior.
+     */
+    @Override
+    public void onBindViewHolder(@NonNull PurchaseItemHolder holder, int position) {
+        PurchaseGroup purchaseGroupItem = purchaseGroupsList.get(position);
+
+        holder.purchaseName.setText("Purchase made on " + purchaseGroupItem.getTimestamp());
+        holder.roommate.setText("By: " + purchaseGroupItem.getRoommate());
+        holder.price.setText("Total: $" + purchaseGroupItem.getTotalWithTax());
+
+        /**
+         * Builds a string showing all items in the purchase.
+         */
+        ArrayList<ShoppingItem> boughtItems = purchaseGroupItem.getItems();
+        String itemsString = "Items:\n";
+        for (ShoppingItem s : boughtItems){
+            itemsString = itemsString + s.getItemName() + " - Qty: " + s.getQuantity() + "\n";
+        }
+        holder.items.setText(itemsString);
+
+        /**
+         * When the item is clicked, open the edit/delete dialog.
+         */
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                EditDeletePurchaseDialog editDeletePurchaseDialogFrag =
+                        EditDeletePurchaseDialog.newInstance(
+                                holder.getAdapterPosition(),
+                                purchaseGroupItem.getKey(),
+                                purchaseGroupItem.getRoommate(),
+                                purchaseGroupItem.getTotalWithTax(),
+                                purchaseGroupItem.getItems()
+                        );
+
+                editDeletePurchaseDialogFrag.show(
+                        ((AppCompatActivity)context).getSupportFragmentManager(),
+                        null
+                );
+            }
+        });
+    }
+
+    /**
+     * Returns the number of purchase groups in the list.
+     */
+    @Override
+    public int getItemCount() {
+        return purchaseGroupsList.size();
+    }
+}

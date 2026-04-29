@@ -22,8 +22,11 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
+/**
+ * This activity shows all completed purchases.
+ * Users can edit purchases, remove items, and settle costs between roommates.
+ */
 public class ReviewPurchasesActivity extends AppCompatActivity implements EditDeletePurchaseDialog.EditDeletePurchaseDialogListener, SettleCostDialog.SettleCostDialogListener {
 
     private RecyclerView recyclerView;
@@ -37,6 +40,8 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Check if user is logged in, otherwise redirect to login
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             this.email = user.getEmail();
@@ -45,29 +50,35 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         }
+
         setContentView(R.layout.activity_review_purchases);
+
         database = FirebaseDatabase.getInstance();
         recyclerView = findViewById(R.id.recyclerView2);
         FloatingActionButton checkoutBtn = findViewById(R.id.floatingActionButton2);
+
         purchasesList = new ArrayList<>();
         recyclerAdapter = new PurchaseItemsRecyclerAdapter(purchasesList, this);
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(recyclerAdapter);
 
+        // When user clicks settle button
         checkoutBtn.setOnClickListener(v -> {
             if (purchasesList.isEmpty()) {
                 Toast.makeText(this, "No purchases to settle!", Toast.LENGTH_SHORT).show();
             } else {
 
+                // Calculate how much each roommate paid
                 HashMap<String, Double> roommateMap = calculateSettleUp(purchasesList);
 
+                // Open dialog to show results
                 DialogFragment newFragment = SettleCostDialog.newInstance(totalSpent, roommateMap);
-                newFragment.show( getSupportFragmentManager(), null);
+                newFragment.show(getSupportFragmentManager(), null);
             }
         });
 
-        // Sync with Firebase Basket
-        // Inside onCreate...
+        // Load purchases from Firebase
         database.getReference("purchaseList").orderByChild("roommate")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
@@ -78,14 +89,17 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
                             PurchaseGroup indivPurchaseGroup = postSnapshot.getValue(PurchaseGroup.class);
 
                             if (indivPurchaseGroup != null) {
+
+                                // Prevent crash if Firebase returns null list
                                 if (indivPurchaseGroup.getItems() == null) {
                                     indivPurchaseGroup.setItems(new ArrayList<>());
                                 }
+
                                 purchaseItems.add(indivPurchaseGroup);
                             }
                         }
 
-                        // Swap the lists and notify
+                        // Update UI
                         purchasesList.clear();
                         purchasesList.addAll(purchaseItems);
                         recyclerAdapter.notifyDataSetChanged();
@@ -102,40 +116,57 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
                 });
     }
 
+    /**
+     * Updates a purchase when user edits or removes an item.
+     */
     public void onUpdatePurchase(int position, double newPrice, int itemToRemoveIndex) {
 
         PurchaseGroup editedGroup = purchasesList.get(position);
         editedGroup.setTotalWithTax(newPrice);
+
         DatabaseReference shoppingRef = database.getReference("shoppingItems");
 
         final ShoppingItem removedItem;
+
+        // If user chose to remove an item
         if (itemToRemoveIndex != -1) {
+
             removedItem = editedGroup.getItems().get(itemToRemoveIndex);
             editedGroup.getItems().remove(itemToRemoveIndex);
+
+            // If no items left → delete entire purchase
             if (editedGroup.getItems().isEmpty()) {
+
+                // Add item back to shopping list before deleting purchase
                 if (removedItem != null) {
                     shoppingRef.orderByChild("itemName").equalTo(removedItem.getItemName())
                             .addListenerForSingleValueEvent(new ValueEventListener() {
+
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot snapshot) {
+
                                     if (snapshot.exists()) {
+                                        // Merge quantities if item already exists
                                         for (DataSnapshot child : snapshot.getChildren()) {
                                             Integer currentQty = child.child("quantity").getValue(Integer.class);
-                                            if (currentQty == null) {
-                                                currentQty = 0;
-                                            }
-                                            child.getRef().child("quantity").setValue(currentQty + removedItem.getQuantity());
+                                            if (currentQty == null) currentQty = 0;
+
+                                            child.getRef().child("quantity")
+                                                    .setValue(currentQty + removedItem.getQuantity());
                                             break;
                                         }
                                     } else {
+                                        // Otherwise create new item
                                         shoppingRef.push().setValue(removedItem);
                                     }
                                 }
+
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError error) {}
                             });
                 }
 
+                // Delete purchase from Firebase
                 database.getReference("purchaseList")
                         .child(editedGroup.getKey())
                         .removeValue()
@@ -148,67 +179,79 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
 
                 return;
             }
+
         } else {
             removedItem = null;
         }
 
-        // 3. Sync to Firebase
+        // Update purchase in Firebase
         database.getReference("purchaseList")
                 .child(editedGroup.getKey())
                 .setValue(editedGroup)
                 .addOnSuccessListener(aVoid -> {
+
+                    // If item was removed, add it back to shopping list
                     if (removedItem != null) {
                         shoppingRef.orderByChild("itemName").equalTo(removedItem.getItemName())
                                 .addListenerForSingleValueEvent(new ValueEventListener() {
+
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot snapshot) {
+
                                         if (snapshot.exists()) {
                                             for (DataSnapshot child : snapshot.getChildren()) {
                                                 Integer currentQty = child.child("quantity").getValue(Integer.class);
-                                                if (currentQty == null) {
-                                                    currentQty = 0;
-                                                }
-                                                child.getRef().child("quantity").setValue(currentQty + removedItem.getQuantity());
+                                                if (currentQty == null) currentQty = 0;
+
+                                                child.getRef().child("quantity")
+                                                        .setValue(currentQty + removedItem.getQuantity());
                                                 break;
                                             }
                                         } else {
                                             shoppingRef.push().setValue(removedItem);
                                         }
                                     }
+
                                     @Override
                                     public void onCancelled(@NonNull DatabaseError error) {}
                                 });
                     }
+
                     Toast.makeText(this, "Purchase updated successfully", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FIREBASE_UPDATE", "Failed: " + e.getMessage());
                 });
-
     }
+
     /**
-     * Calculates total spending and the net balance for each roommate.
-     * Positive value = Roommate is owed money (they overpaid).
-     * Negative value = Roommate owes money (they underpaid).
+     * Calculates how much each roommate paid.
      */
     public HashMap<String, Double> calculateSettleUp(ArrayList<PurchaseGroup> purchases) {
+
         totalSpent = 0;
-        // Map to aggregate totals: Key = Roommate, Value = Sum of all their purchases
+
         HashMap<String, Double> roommatePaidMap = new HashMap<>();
 
-        // 1. Aggregate totals (This handles the "Duplicates")
+        // Loop through all purchases
         for (PurchaseGroup pg : purchases) {
+
             String roommate = pg.getRoommate();
             double amount = pg.getTotalWithTax();
 
             totalSpent += amount;
 
-            // if roommate exists, add to their total or start at 0.0
+            // Add amount to that roommate's total
             double currentTotal = roommatePaidMap.getOrDefault(roommate, 0.0);
-            roommatePaidMap.put(roommate, currentTotal + amount); //update amt in map
+            roommatePaidMap.put(roommate, currentTotal + amount);
         }
+
         return roommatePaidMap;
     }
+
+    /**
+     * Clears all purchases after settling.
+     */
     public void clearPurchases() {
 
         database.getReference("purchaseList")
@@ -221,7 +264,4 @@ public class ReviewPurchasesActivity extends AppCompatActivity implements EditDe
                     Log.e("FIREBASE_UPDATE", "Failed: " + e.getMessage());
                 });
     }
-
-
-
 }

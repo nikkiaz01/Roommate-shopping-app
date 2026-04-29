@@ -12,16 +12,29 @@ import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 
+/**
+ * RecyclerView adapter used to display items in the basket.
+ * Each item shows its name, quantity, and a remove button.
+ */
 public class BasketItemRecyclerAdapter extends RecyclerView.Adapter<BasketItemRecyclerAdapter.BasketItemHolder> {
 
     private ArrayList<ShoppingItem> basketItemList;
     private Context context;
 
+    /**
+     * Constructor for the adapter.
+     *
+     * @param basketItemList list of items in the basket
+     * @param context activity context
+     */
     public BasketItemRecyclerAdapter(ArrayList<ShoppingItem> basketItemList, Context context) {
         this.basketItemList = basketItemList;
         this.context = context;
     }
 
+    /**
+     * ViewHolder class that holds references to each item view.
+     */
     class BasketItemHolder extends RecyclerView.ViewHolder {
         TextView itemName;
         TextView quantity;
@@ -35,6 +48,9 @@ public class BasketItemRecyclerAdapter extends RecyclerView.Adapter<BasketItemRe
         }
     }
 
+    /**
+     * Creates a new ViewHolder when needed.
+     */
     @NonNull
     @Override
     public BasketItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -42,6 +58,10 @@ public class BasketItemRecyclerAdapter extends RecyclerView.Adapter<BasketItemRe
         return new BasketItemHolder(view);
     }
 
+    /**
+     * Binds data to each item in the RecyclerView.
+     * Displays item name, quantity, and sets up the remove button.
+     */
     @Override
     public void onBindViewHolder(@NonNull BasketItemHolder holder, int position) {
         ShoppingItem basketItem = basketItemList.get(position);
@@ -54,6 +74,10 @@ public class BasketItemRecyclerAdapter extends RecyclerView.Adapter<BasketItemRe
         materialButton.setIconPadding(0);
         holder.removeButton.setText("Remove");
 
+        /**
+         * When remove button is clicked, the item is sent back
+         * to the shopping list through the activity.
+         */
         holder.removeButton.setOnClickListener(v -> {
             int currentPos = holder.getBindingAdapterPosition();
             if (currentPos != RecyclerView.NO_POSITION && context instanceof ReviewBasketActivity) {
@@ -62,6 +86,9 @@ public class BasketItemRecyclerAdapter extends RecyclerView.Adapter<BasketItemRe
         });
     }
 
+    /**
+     * Returns the number of items in the basket.
+     */
     @Override
     public int getItemCount() {
         return basketItemList.size();

@@ -12,19 +12,28 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
-import java.util.List;
-
+/**
+ * This dialog allows the user to enter the total price
+ * for all items in the basket during checkout.
+ */
 public class PurchaseItemsDialogFragment extends DialogFragment {
-    //a purchase group, removing basketItems completely
 
+    // stores the total price entered by the user
     private double totalWithTax;
 
     private PurchaseItemDialogListener mListener;
 
+    /**
+     * Listener interface used to send the completed purchase
+     * back to the activity.
+     */
     public interface PurchaseItemDialogListener {
         void checkOutBasket(PurchaseGroup purchaseItems);
     }
 
+    /**
+     * Attaches the listener to the activity.
+     */
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
@@ -35,6 +44,10 @@ public class PurchaseItemsDialogFragment extends DialogFragment {
         }
     }
 
+    /**
+     * Creates and displays the dialog UI.
+     * The user enters the total price for the basket items.
+     */
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -46,18 +59,26 @@ public class PurchaseItemsDialogFragment extends DialogFragment {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogStyle);
         builder.setView(layout).setTitle("Enter total for items in Basket:");
+
+        // Cancel button closes the dialog
         builder.setNegativeButton(android.R.string.cancel, (d, w) -> d.dismiss());
+
+        /**
+         * Confirm button reads the entered total,
+         * creates a PurchaseGroup, and sends it back to the activity.
+         */
         builder.setPositiveButton("Confirm", (d, w) -> {
             String totalString = totalView.getText().toString();
+
             if (!totalString.isEmpty()) {
-                totalWithTax = Double.parseDouble((totalView.getText().toString()));
+                totalWithTax = Double.parseDouble(totalString);
+
                 PurchaseGroup purchaseItems = new PurchaseGroup(totalWithTax);
+
                 mListener.checkOutBasket(purchaseItems);
             } else {
                 Toast.makeText(getContext(), "Please enter a valid total", Toast.LENGTH_SHORT).show();
             }
-
-
         });
 
         return builder.create();

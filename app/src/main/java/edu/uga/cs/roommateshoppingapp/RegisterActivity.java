@@ -18,7 +18,10 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-
+/**
+ * This activity allows a user to register for a new account.
+ * It collects email and password, validates input, and creates a Firebase user.
+ */
 public class RegisterActivity extends AppCompatActivity {
 
     private static final String DEBUG_TAG = "RegisterActivity";
@@ -26,6 +29,10 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText emailEditText;
     private EditText passwordEditText;
 
+    /**
+     * Called when the activity is created.
+     * Initializes UI components and button listener.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,14 +45,20 @@ public class RegisterActivity extends AppCompatActivity {
         registerButton.setOnClickListener( new RegisterButtonClickListener() );
     }
 
+    /**
+     * Handles register button click.
+     * Validates input and creates a new user in Firebase.
+     */
     private class RegisterButtonClickListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
+
             final String email = emailEditText.getText().toString();
             final String password = passwordEditText.getText().toString();
 
             final FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
 
+            // Validate email input
             if (email.isEmpty()) {
                 emailEditText.setError("Email is required");
                 return;
@@ -56,6 +69,7 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
+            // Validate password input
             if (password.isEmpty()) {
                 passwordEditText.setError("Password is required");
                 return;
@@ -66,35 +80,35 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            // This is how we can create a new user using an email/password combination.
-            // Note that we also add an onComplete listener, which will be invoked once
-            // a new user has been created by Firebase.  This is how we will know the
-            // new user creation succeeded or failed.
-            // If a new user has been created, Firebase already signs in the new user;
-            // no separate sign in is needed.
+            /**
+             * Creates a new user using Firebase Authentication.
+             * If successful, the user is automatically signed in.
+             */
             firebaseAuth.createUserWithEmailAndPassword( email, password )
                     .addOnCompleteListener( RegisterActivity.this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
+
                             if (task.isSuccessful()) {
 
                                 Toast.makeText( getApplicationContext(),
                                         "Registered user: " + email,
                                         Toast.LENGTH_SHORT ).show();
 
-                                // Sign in success, update UI with the signed-in user's information
                                 Log.d( DEBUG_TAG, "createUserWithEmail: success" );
 
                                 FirebaseUser user = firebaseAuth.getCurrentUser();
 
+                                // Go back to main screen after registration
                                 Intent intent = new Intent( RegisterActivity.this, MainActivity.class );
                                 startActivity( intent );
 
                             } else {
-                                // If sign in fails, display a message to the user.
+
                                 Log.w(DEBUG_TAG, "createUserWithEmail: failure", task.getException());
                                 Exception e = task.getException();
 
+                                // Handle duplicate email case
                                 if (e instanceof com.google.firebase.auth.FirebaseAuthUserCollisionException) {
                                     emailEditText.setError("This email already exists. Try logging in instead.");
                                 } else {

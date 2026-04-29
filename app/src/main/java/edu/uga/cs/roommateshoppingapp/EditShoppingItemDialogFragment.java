@@ -14,9 +14,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
-
-// This is a DialogFragment to handle edits to a ShoppingItem.
-// The edits are: updates and deletions of existing ShoppingItems.
+/**
+ * This dialog allows the user to edit or delete a shopping item.
+ * The user can update the item name and quantity or remove the item completely.
+ */
 public class EditShoppingItemDialogFragment extends DialogFragment {
 
     // indicate the type of the edit
@@ -31,14 +32,22 @@ public class EditShoppingItemDialogFragment extends DialogFragment {
     String name;
     int quantity;
 
-    // A callback listener interface to finish up the editing of a ShoppingItem.
-    // ReviewShoppingItemsActivity implements this listener interface, as it will
-    // need to update the list of ShoppingItems and also update the RecyclerAdapter to reflect the
-    // changes.
+    /**
+     * Listener interface used to send updated or deleted item data back to the activity.
+     */
     public interface EditShoppingItemDialogListener {
         void updateShoppingItem(int position, ShoppingItem shoppingItem, int action);
     }
 
+    /**
+     * Creates a new instance of the dialog and passes item data using a Bundle.
+     *
+     * @param position position of the item in the list
+     * @param key database key of the item
+     * @param name name of the item
+     * @param quantity quantity of the item
+     * @return a new EditShoppingItemDialogFragment instance
+     */
     public static EditShoppingItemDialogFragment newInstance(int position, String key, String name, int quantity) {
         EditShoppingItemDialogFragment dialog = new EditShoppingItemDialogFragment();
 
@@ -53,6 +62,10 @@ public class EditShoppingItemDialogFragment extends DialogFragment {
         return dialog;
     }
 
+    /**
+     * Creates and displays the dialog UI.
+     * The user can edit item name and quantity or delete the item.
+     */
     @NonNull
     @Override
     public Dialog onCreateDialog( Bundle savedInstanceState ) {
@@ -69,7 +82,6 @@ public class EditShoppingItemDialogFragment extends DialogFragment {
         quantityView = layout.findViewById( R.id.editText2 );
 
         // Pre-fill the edit texts with the current values for this shopping item.
-        // The user will be able to modify them.
         itemNameView.setText( name );
         quantityView.setText(String.valueOf(quantity));
 
@@ -83,7 +95,6 @@ public class EditShoppingItemDialogFragment extends DialogFragment {
         builder.setNegativeButton( android.R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int whichButton) {
-                // close the dialog
                 dialog.dismiss();
             }
         });
@@ -98,6 +109,10 @@ public class EditShoppingItemDialogFragment extends DialogFragment {
         return builder.create();
     }
 
+    /**
+     * Handles the save button click.
+     * Updates the item name and quantity.
+     */
     private class SaveButtonClickListener implements DialogInterface.OnClickListener {
         @Override
         public void onClick(DialogInterface dialog, int which) {
@@ -107,17 +122,18 @@ public class EditShoppingItemDialogFragment extends DialogFragment {
             ShoppingItem shoppingItem = new ShoppingItem( itemName, quantity );
             shoppingItem.setKey( key );
 
-            // get the Activity's listener to add the new shopping item
             EditShoppingItemDialogListener listener = (EditShoppingItemDialogListener) getActivity();
 
-            // add the new job lead
             listener.updateShoppingItem( position, shoppingItem, SAVE );
 
-            // close the dialog
             dismiss();
         }
     }
 
+    /**
+     * Handles the delete button click.
+     * Removes the item from the list.
+     */
     private class DeleteButtonClickListener implements DialogInterface.OnClickListener {
         @Override
         public void onClick( DialogInterface dialog, int which ) {
@@ -125,10 +141,9 @@ public class EditShoppingItemDialogFragment extends DialogFragment {
             ShoppingItem shoppingItem = new ShoppingItem( name, quantity );
             shoppingItem.setKey( key );
 
-            // get the Activity's listener to add the new shopping item
-            EditShoppingItemDialogListener listener = (EditShoppingItemDialogListener) getActivity();            // add the new shopping item
+            EditShoppingItemDialogListener listener = (EditShoppingItemDialogListener) getActivity();
             listener.updateShoppingItem( position, shoppingItem, DELETE );
-            // close the dialog
+
             dismiss();
         }
     }
